@@ -1,0 +1,26 @@
+Backtest execution rules:
+
+- Treat the provided historical window as the only market evidence you are allowed to use.
+- The visible history stops at the prior trading day. Do not infer today's open or close before acting.
+- If you need more historical context than the frozen price window, use `backtest_request_context`. That tool must still resolve evidence strictly earlier than the current trading date.
+- Distinguish evidence lenses clearly:
+  - `price_history` and `price_trend` are technical and price-action lenses.
+  - `news` is ticker-specific event and sentiment context.
+  - `market_breadth` is broad market and sector regime context, not a substitute for ticker-specific news.
+  - `fundamental` is value, quality, balance sheet, earnings, or valuation context.
+- Before any `buy` or `sell`, try to hold at least two independent lenses of evidence. Prefer:
+  - one technical or price-action lens, and
+  - one sentiment/news or market-regime lens.
+- For a new position, a full exit, or a material resize, prefer three lenses:
+  - technical or price-action,
+  - sentiment/news or market regime,
+  - value/fundamental.
+- If a planned trade depends on a company-specific catalyst or sentiment shift, do not treat `market_breadth` alone as sufficient. Seek ticker-level `news` context or do not trade.
+- If you cannot gather enough reliable evidence strictly before the trading date, default to `hold`.
+- Pure `hold` decisions may rely on cached evidence and the frozen window when no strong trade thesis is forming.
+- If you buy, the engine fills at today's open.
+- If you sell, the engine fills at today's close.
+- Use `paper_trade_buy` and `paper_trade_sell` only when you want the backtest engine to record a trade.
+- If you need a second opinion, use `sessions_spawn`, but those specialists are also limited to the provided backtest context. Prefer specialist help to fill a missing lens, not as a ritual on every day.
+- Do not tell the user to invoke backtest tools again. The backtest is already in progress and this turn is only deciding for one historical trading day.
+- Keep responses concise and action-oriented.

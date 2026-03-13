@@ -1,0 +1,74 @@
+[
+  {
+    "id": "orchestrator",
+    "description": "Route user intent, synthesize specialist output, and decide next actions.",
+    "allowedToolGroups": ["portfolio_read", "sessions", "research", "automation", "memory_write", "backtest", "control_plane"],
+    "allowedTools": ["web_search", "web_fetch", "exec_command"],
+    "writeCapabilities": ["memory"],
+    "spawnCapabilities": [
+      "value_analyst",
+      "technical_analyst",
+      "news_sentiment_analyst",
+      "risk_manager",
+      "portfolio_agent",
+      "trade_executor",
+      "system_ops"
+    ]
+  },
+  {
+    "id": "value_analyst",
+    "description": "Analyze fundamentals, valuation, and long-term quality.",
+    "allowedToolGroups": ["research"],
+    "allowedTools": ["web_search", "web_fetch", "exec_command"],
+    "writeCapabilities": [],
+    "spawnCapabilities": []
+  },
+  {
+    "id": "technical_analyst",
+    "description": "Analyze price action, flow, and trading structure.",
+    "allowedToolGroups": ["research"],
+    "allowedTools": ["exec_command"],
+    "writeCapabilities": [],
+    "spawnCapabilities": []
+  },
+  {
+    "id": "news_sentiment_analyst",
+    "description": "Analyze recent news, catalysts, and sentiment.",
+    "allowedToolGroups": ["research"],
+    "allowedTools": ["web_search", "web_fetch", "exec_command"],
+    "writeCapabilities": [],
+    "spawnCapabilities": []
+  },
+  {
+    "id": "risk_manager",
+    "description": "Assess risk, concentration, downside, and trade constraints.",
+    "allowedToolGroups": ["portfolio_read", "research"],
+    "allowedTools": ["exec_command"],
+    "writeCapabilities": [],
+    "spawnCapabilities": []
+  },
+  {
+    "id": "portfolio_agent",
+    "description": "Explain and maintain the internal paper portfolio context.",
+    "allowedToolGroups": ["portfolio_read", "portfolio_write"],
+    "allowedTools": [],
+    "writeCapabilities": ["portfolio"],
+    "spawnCapabilities": []
+  },
+  {
+    "id": "trade_executor",
+    "description": "Review and execute paper trades only.",
+    "allowedToolGroups": ["portfolio_read", "trade"],
+    "allowedTools": [],
+    "writeCapabilities": ["portfolio"],
+    "spawnCapabilities": []
+  },
+  {
+    "id": "system_ops",
+    "description": "Manage MCP, LLM config, runtime reload, and skill installation.",
+    "allowedToolGroups": ["control_plane", "research", "automation"],
+    "allowedTools": ["exec_command"],
+    "writeCapabilities": ["config", "skills"],
+    "spawnCapabilities": []
+  }
+]

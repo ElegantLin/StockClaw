@@ -1,0 +1,188 @@
+{
+  "portfolio_read": {
+    "category": "portfolio",
+    "risk": "read",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "portfolio_read": {
+        "description": "Read the current paper portfolio snapshot."
+      },
+      "portfolio_summary": {
+        "description": "Generate a portfolio summary markdown view."
+      }
+    }
+  },
+  "portfolio_write": {
+    "category": "portfolio",
+    "risk": "write",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "portfolio_patch": {
+        "description": "Patch parts of the paper portfolio snapshot."
+      },
+      "portfolio_replace": {
+        "description": "Replace the paper portfolio snapshot."
+      }
+    }
+  },
+  "base": {
+    "category": "memory",
+    "risk": "read",
+    "source": "business",
+    "alwaysAvailable": true,
+    "tools": {
+      "memory_search": {
+        "description": "Search durable memory markdown files for relevant snippets."
+      },
+      "memory_get": {
+        "description": "Read a focused durable memory snippet by path and line range."
+      },
+      "memory_read": {
+        "description": "Read durable memory documents by category or path."
+      }
+    }
+  },
+  "memory_write": {
+    "category": "memory",
+    "risk": "write",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "memory_write_markdown": {
+        "description": "Append a concise, LLM-summarized durable bootstrap memory note to an approved markdown path."
+      },
+      "memory_append_daily_log": {
+        "description": "Append durable notes to the dated daily memory log."
+      },
+      "memory_write_portfolio_summary": {
+        "description": "Rewrite the portfolio summary markdown from the current portfolio state."
+      }
+    }
+  },
+  "trade": {
+    "category": "trade",
+    "risk": "exec",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "paper_trade_buy": {
+        "description": "Execute a paper buy order."
+      },
+      "paper_trade_sell": {
+        "description": "Execute a paper sell order."
+      }
+    }
+  },
+  "backtest": {
+    "category": "backtest",
+    "risk": "exec",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "backtest_prepare_dataset": {
+        "description": "Prepare and freeze a historical backtest dataset by discovering a usable MCP market-data provider and fetching the requested range."
+      },
+      "backtest_run_dataset": {
+        "description": "Run a prepared historical backtest dataset and return only the final structured result."
+      },
+      "backtest_asset": {
+        "description": "Queue an end-to-end historical backtest for a single asset. The run continues in the background and the final result is delivered back to the originating session."
+      },
+      "backtest_portfolio": {
+        "description": "Queue an end-to-end historical backtest for an explicit portfolio. The run continues in the background and the final result is delivered back to the originating session."
+      },
+      "backtest_current_portfolio": {
+        "description": "Queue an end-to-end historical backtest starting from the current paper portfolio snapshot frozen at submission time. The final result is delivered back to the originating session."
+      }
+    }
+  },
+  "control_plane": {
+    "category": "ops",
+    "risk": "admin",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "config_get": {
+        "category": "config",
+        "risk": "read",
+        "description": "Read MCP or LLM configuration files."
+      },
+      "config_patch": {
+        "category": "config",
+        "description": "Patch MCP config or JSON-backed LLM config."
+      },
+      "config_apply": {
+        "category": "config",
+        "description": "Replace MCP or LLM config with raw content."
+      },
+      "install_mcp": {
+        "description": "Install an MCP server entry into MCP config."
+      },
+      "install_skill": {
+        "description": "Install a skill from a local path or git URL."
+      },
+      "verify_runtime": {
+        "risk": "read",
+        "description": "Verify MCP or LLM runtime configuration."
+      },
+      "restart_runtime": {
+        "description": "Schedule a full stock-claw process restart."
+      }
+    }
+  },
+  "automation": {
+    "category": "ops",
+    "risk": "admin",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "cron": {
+        "description": "Create, inspect, update, run, and remove scheduled monitoring or reminder jobs."
+      }
+    }
+  },
+  "sessions": {
+    "category": "session",
+    "risk": "read",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "session_status": {
+        "description": "Inspect the current session summary, spawned specialists, and recent backtest jobs."
+      },
+      "sessions_spawn": {
+        "risk": "admin",
+        "description": "Spawn a specialist subagent for a focused task and return its summary."
+      },
+      "sessions_list": {
+        "description": "List specialist runs already spawned under the current root session."
+      },
+      "sessions_history": {
+        "description": "Read specialist result history for the current root session or request."
+      },
+      "telegram_send_file": {
+        "risk": "write",
+        "description": "Send a file artifact to the current Telegram chat session."
+      }
+    }
+  },
+  "research": {
+    "category": "research",
+    "risk": "read",
+    "source": "business",
+    "alwaysAvailable": false,
+    "tools": {
+      "exec_command": {
+        "description": "Run an approved read-only command. Use this for skills such as mcporter when you need MCP data."
+      },
+      "web_search": {
+        "description": "Search the web through the best available MCP-backed research tool."
+      },
+      "web_fetch": {
+        "description": "Fetch a webpage through the best available MCP-backed research tool."
+      }
+    }
+  }
+}

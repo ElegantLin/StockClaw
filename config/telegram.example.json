@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "botToken": "replace-with-your-bot-token",
+  "adminChatId": "",
+  "pollingTimeoutSeconds": 20,
+  "pollingIntervalMs": 1000,
+  "pairing": {
+    "enabled": true,
+    "notifyAdmin": true
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai",
+      "headers": {
+        "X-Smithery-Key": "YOUR_SMITHERY_KEY"
+      }
+    },
+    "longport": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "E:\\github\\us-share-mcp",
+        "run",
+        "python",
+        "mcp_server.py"
+      ],
+      "cwd": "E:\\github\\us-share-mcp",
+      "env": {
+        "LONGPORT_APP_KEY": "YOUR_LONGPORT_APP_KEY",
+        "LONGPORT_APP_SECRET": "YOUR_LONGPORT_APP_SECRET",
+        "LONGPORT_ACCESS_TOKEN": "YOUR_LONGPORT_ACCESS_TOKEN"
+      }
+    }
+  }
+}

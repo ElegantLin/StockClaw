@@ -1,0 +1,10 @@
+{
+  "accountId": "default",
+  "mode": "paper",
+  "cash": 0,
+  "equity": null,
+  "buyingPower": null,
+  "positions": [],
+  "openOrders": [],
+  "updatedAt": ""
+}
