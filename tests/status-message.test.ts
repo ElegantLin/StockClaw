@@ -94,6 +94,67 @@ describe("buildStatusMessage", () => {
     expect(message).toContain("2026-03-12.md [daily flush]");
   });
 
+  it("does not duplicate the live session summary heading when the stored summary is markdown", () => {
+    const message = buildStatusMessage({
+      session: {
+        sessionId: "web:session-1",
+        requestId: null,
+        lastIntent: "investment_research",
+        transcriptEntries: 4,
+        sessionSummary: [
+          "# Live Session Summary",
+          "",
+          "## Durable User Preferences",
+          "",
+          "- Prefer low drawdown.",
+        ].join("\n"),
+        updatedAt: "2026-03-12T00:00:00.000Z",
+        contextUsage: {
+          contextTokens: 100,
+          source: "estimate",
+          contextWindow: 128000,
+          remainingTokens: 127900,
+          percentUsed: 1,
+          compactionThresholdTokens: 76800,
+        },
+        lastUsage: null,
+        cumulativeUsage: {
+          turns: 0,
+          input: 0,
+          output: 0,
+          cacheRead: 0,
+          cacheWrite: 0,
+          totalTokens: 0,
+          contextTokens: 0,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+        },
+        specialistCount: 0,
+        specialists: [],
+        backtests: {
+          queued: 0,
+          preparing: 0,
+          running: 0,
+          completed: 0,
+          failed: 0,
+          active: 0,
+          jobs: [],
+        },
+        crons: {
+          total: 0,
+          active: 0,
+          running: 0,
+          jobs: [],
+        },
+      },
+      runtime: null,
+    });
+
+    expect(message).toContain("Live Session Summary:");
+    expect(message).toContain("## Durable User Preferences");
+    expect(message).not.toContain("Live Session Summary\nLive Session Summary");
+    expect(message).not.toContain("# Live Session Summary");
+  });
+
   it("shows only the latest backtest job in status output and points to /backtests", () => {
     const message = buildStatusMessage({
       session: {

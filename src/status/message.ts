@@ -53,7 +53,7 @@ export function buildStatusMessage(params: {
   }
 
   if (params.session.sessionSummary) {
-    lines.push("", "Live Session Summary:", params.session.sessionSummary);
+    lines.push("", "Live Session Summary:", stripSummaryHeading(params.session.sessionSummary));
   }
 
   if (params.runtime) {
@@ -118,4 +118,8 @@ export function buildStatusMessage(params: {
   }
 
   return lines.join("\n");
+}
+
+function stripSummaryHeading(markdown: string): string {
+  return markdown.replace(/^#\s+Live Session Summary\s*\r?\n\r?\n?/i, "").trim();
 }
