@@ -415,6 +415,15 @@ export class TelegramExtension {
       });
       return true;
     }
+    if (command === "/compact") {
+      await this.runWithTyping(chatId, async () => {
+        const orchestrator = await this.runtime.getOrchestrator();
+        const sessionId = `telegram:${chatId}`;
+        const result = await orchestrator.compactSession(sessionId);
+        await this.sendLongMessage(chatId, result.message);
+      });
+      return true;
+    }
     if (command === "/backtests") {
       await this.runWithTyping(chatId, async () => {
         const orchestrator = await this.runtime.getOrchestrator();
@@ -598,6 +607,7 @@ export class TelegramExtension {
   private async registerCommands(): Promise<void> {
     const publicCommands: TelegramBotCommand[] = [
       { command: "status", description: "Show current session status and context usage" },
+      { command: "compact", description: "Compact the current chat context now" },
       { command: "backtests", description: "Show full backtest job history for this chat" },
       { command: "portfolio", description: "Show the current paper portfolio snapshot" },
       { command: "new", description: "Archive and reset the current chat session" },

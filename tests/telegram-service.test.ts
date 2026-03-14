@@ -714,6 +714,62 @@ describe("TelegramExtension", () => {
     expect(sent.some((item) => item.text.includes("job-1"))).toBe(false);
   });
 
+  it("manually compacts the current chat for /compact", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "stock-claw-telegram-service-"));
+    const sent: Array<{ chatId: string; text: string }> = [];
+    const updates: TelegramUpdate[] = [
+      {
+        update_id: 1,
+        message: {
+          message_id: 1,
+          date: 1,
+          text: "/compact",
+          chat: { id: 200, type: "private" },
+          from: { id: 200, username: "alice" },
+        },
+      },
+    ];
+    const api: TelegramBotApi = {
+      getMe: async () => ({ id: 999, username: "stockclawbot" }),
+      getUpdates: async () => updates.splice(0),
+      sendMessage: async (chatId, text) => {
+        sent.push({ chatId, text });
+      },
+      sendChatAction: async () => {},
+      setMyCommands: async () => {},
+    };
+    const orchestrator = {
+      compactSession: vi.fn(async () => ({
+        ok: true,
+        message: "The active session context was compacted successfully.",
+      })),
+    };
+    const runtime: any = {
+      getOrchestrator: vi.fn(async () => orchestrator),
+      inspect: vi.fn(),
+    };
+    const config: TelegramConfig = {
+      enabled: true,
+      botToken: "token",
+      adminChatId: "100",
+      pollingTimeoutSeconds: 1,
+      pollingIntervalMs: 5,
+      pairing: { enabled: false, notifyAdmin: false },
+    };
+
+    const extension = new TelegramExtension(config, runtime, {
+      api,
+      pairing: new TelegramPairingStore(path.join(dir, "pairing.json")),
+      pollerLock: createUnlockedPoller(),
+    });
+    await extension.start();
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    await extension.close();
+
+    expect(orchestrator.compactSession).toHaveBeenCalledWith("telegram:200");
+    expect(sent.some((item) => item.text.includes("compacted successfully"))).toBe(true);
+  });
+
   it("returns full backtest history for /backtests", async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "stock-claw-telegram-service-"));
     const sent: Array<{ chatId: string; text: string }> = [];
@@ -1051,6 +1107,7 @@ describe("TelegramExtension", () => {
 
     expect(commandRegistrations.length).toBe(2);
     expect(commandRegistrations[0]?.commands.some((command) => command.command === "backtests")).toBe(true);
+    expect(commandRegistrations[0]?.commands.some((command) => command.command === "compact")).toBe(true);
     expect(commandRegistrations[0]?.commands.some((command) => command.command === "portfolio")).toBe(true);
     expect(commandRegistrations[1]?.commands.some((command) => command.command === "runtime")).toBe(true);
     expect(commandRegistrations[1]?.commands.some((command) => command.command === "cron")).toBe(true);

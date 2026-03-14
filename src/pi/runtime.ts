@@ -26,6 +26,7 @@ interface RunAgentParams {
   persistent?: boolean;
   beforeCompact?: (messages: ConversationMessage[]) => Promise<{
     customInstructions?: string | null;
+    summaryMarkdown?: string | null;
   } | void>;
 }
 
@@ -63,6 +64,45 @@ export class PiRuntime {
     return this.runAgent({ ...params, persistent: false });
   }
 
+  async compactPersistentSession(params: Omit<RunAgentParams, "persistent" | "userPrompt">): Promise<{
+    compacted: boolean;
+    summaryMarkdown: string | null;
+  }> {
+    await mkdir(this.sessionRoot, { recursive: true });
+    await mkdir(this.agentDir, { recursive: true });
+
+    const index = await this.loadSessionIndex();
+    if (!(params.sessionKey in index)) {
+      return { compacted: false, summaryMarkdown: null };
+    }
+
+    const sessionContext = await this.createSessionContext({
+      sessionKey: params.sessionKey,
+      systemPrompt: params.systemPrompt,
+      allowedTools: params.allowedTools,
+      customTools: params.customTools,
+      persistent: true,
+    });
+    const { session } = sessionContext;
+
+    try {
+      let summaryMarkdown: string | null = null;
+      if (params.beforeCompact) {
+        const result = await params.beforeCompact(toConversationMessages(session.messages));
+        summaryMarkdown = result?.summaryMarkdown ?? null;
+        await session.compact(result?.customInstructions || compactionInstructions());
+      } else {
+        await session.compact(compactionInstructions());
+      }
+      return {
+        compacted: true,
+        summaryMarkdown,
+      };
+    } finally {
+      session.dispose();
+    }
+  }
+
   private async runAgent(params: RunAgentParams): Promise<AgentRunResult> {
     await mkdir(this.sessionRoot, { recursive: true });
     await mkdir(this.agentDir, { recursive: true });
@@ -76,74 +116,9 @@ export class PiRuntime {
       },
     });
 
-    const systemPrompt = this.composeSystemPrompt(params.systemPrompt);
-    const authStorage = AuthStorage.create(this.authPath);
-    const modelRegistry = new ModelRegistry(authStorage, this.modelsPath);
-    const settingsManager = SettingsManager.inMemory({
-      compaction: { enabled: false },
-      retry: { enabled: true, maxRetries: 2 },
-    });
-    const loader = new DefaultResourceLoader({
-      cwd: this.cwd,
-      agentDir: this.agentDir,
-      settingsManager,
-      noExtensions: true,
-      noSkills: true,
-      noPromptTemplates: true,
-      noThemes: true,
-      agentsFilesOverride: () => ({ agentsFiles: [] }),
-      systemPromptOverride: () => systemPrompt,
-      extensionFactories: [
-        (pi) => {
-          pi.registerProvider(this.providerName, {
-            baseUrl: this.llm.endpoint.baseUrl,
-            apiKey: this.llm.endpoint.apiKey,
-            api: "openai-completions",
-            headers: this.llm.endpoint.headers,
-            models: [
-              {
-                id: this.llm.chat.model,
-                name: this.llm.chat.model,
-                reasoning: true,
-                input: ["text"],
-                cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-                contextWindow: this.llm.chat.contextWindow,
-                maxTokens: this.llm.chat.maxOutputTokens,
-                compat: {
-                  supportsDeveloperRole: false,
-                  maxTokensField: "max_tokens",
-                },
-              },
-            ],
-          });
-        },
-      ],
-    });
-    await loader.reload();
-
-    const sessionManager = params.persistent
-      ? await this.getPersistentSessionManager(params.sessionKey)
-      : SessionManager.inMemory();
-    const customTools = params.customTools ?? this.mcpRuntime.createPiCustomTools(params.allowedTools);
-    const { session } = await createAgentSession({
-      cwd: this.cwd,
-      agentDir: this.agentDir,
-      authStorage,
-      modelRegistry,
-      settingsManager,
-      resourceLoader: loader,
-      sessionManager,
-      tools: [],
-      customTools,
-    });
+    const { session } = await this.createSessionContext(params);
 
     try {
-      const model = modelRegistry.find(this.providerName, this.llm.chat.model);
-      if (!model) {
-        throw new Error(`Unable to resolve PI model ${this.providerName}/${this.llm.chat.model}.`);
-      }
-      await session.setModel(model);
-
       if (params.persistent && session.sessionFile) {
         await this.storeSessionFile(params.sessionKey, session.sessionFile);
       }
@@ -270,6 +245,78 @@ export class PiRuntime {
   private composeSystemPrompt(basePrompt: string): string {
     const skillsPrompt = this.skills.buildPrompt();
     return [basePrompt.trim(), skillsPrompt].filter(Boolean).join("\n\n").trim();
+  }
+
+  private async createSessionContext(params: Pick<
+    RunAgentParams,
+    "sessionKey" | "systemPrompt" | "allowedTools" | "customTools" | "persistent"
+  >) {
+    const systemPrompt = this.composeSystemPrompt(params.systemPrompt);
+    const authStorage = AuthStorage.create(this.authPath);
+    const modelRegistry = new ModelRegistry(authStorage, this.modelsPath);
+    const settingsManager = SettingsManager.inMemory({
+      compaction: { enabled: false },
+      retry: { enabled: true, maxRetries: 2 },
+    });
+    const loader = new DefaultResourceLoader({
+      cwd: this.cwd,
+      agentDir: this.agentDir,
+      settingsManager,
+      noExtensions: true,
+      noSkills: true,
+      noPromptTemplates: true,
+      noThemes: true,
+      agentsFilesOverride: () => ({ agentsFiles: [] }),
+      systemPromptOverride: () => systemPrompt,
+      extensionFactories: [
+        (pi) => {
+          pi.registerProvider(this.providerName, {
+            baseUrl: this.llm.endpoint.baseUrl,
+            apiKey: this.llm.endpoint.apiKey,
+            api: "openai-completions",
+            headers: this.llm.endpoint.headers,
+            models: [
+              {
+                id: this.llm.chat.model,
+                name: this.llm.chat.model,
+                reasoning: true,
+                input: ["text"],
+                cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+                contextWindow: this.llm.chat.contextWindow,
+                maxTokens: this.llm.chat.maxOutputTokens,
+                compat: {
+                  supportsDeveloperRole: false,
+                  maxTokensField: "max_tokens",
+                },
+              },
+            ],
+          });
+        },
+      ],
+    });
+    await loader.reload();
+
+    const sessionManager = params.persistent
+      ? await this.getPersistentSessionManager(params.sessionKey)
+      : SessionManager.inMemory();
+    const customTools = params.customTools ?? this.mcpRuntime.createPiCustomTools(params.allowedTools);
+    const { session } = await createAgentSession({
+      cwd: this.cwd,
+      agentDir: this.agentDir,
+      authStorage,
+      modelRegistry,
+      settingsManager,
+      resourceLoader: loader,
+      sessionManager,
+      tools: [],
+      customTools,
+    });
+    const model = modelRegistry.find(this.providerName, this.llm.chat.model);
+    if (!model) {
+      throw new Error(`Unable to resolve PI model ${this.providerName}/${this.llm.chat.model}.`);
+    }
+    await session.setModel(model);
+    return { session };
   }
 }
 

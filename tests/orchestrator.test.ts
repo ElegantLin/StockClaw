@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { Orchestrator } from "../src/orchestrator.js";
 
@@ -129,5 +129,61 @@ describe("Orchestrator intent classification", () => {
 
     expect(result.response.message).toContain("active session has been reset");
     expect(result.response.blocks).toEqual([]);
+  });
+
+  it("manually compacts an existing session and updates the stored summary", async () => {
+    const updateSessionSummary = vi.fn(async () => {});
+    const compactSession = vi.fn(async () => ({
+      compacted: true,
+      summaryMarkdown: "# Live Session Summary\n\n- Session ID: telegram:200",
+    }));
+    const instance = new Orchestrator(
+      {} as never,
+      {} as never,
+      {} as never,
+      {
+        compactSession,
+      } as never,
+      {} as never,
+      {
+        getSession: async () => ({
+          sessionId: "telegram:200",
+          userId: "telegram:200",
+          channel: "telegram",
+          createdAt: "2026-03-14T01:00:00.000Z",
+          updatedAt: "2026-03-14T01:10:00.000Z",
+          lastIntent: "chat",
+          transcript: [
+            {
+              role: "user",
+              content: "hello",
+              timestamp: "2026-03-14T01:00:00.000Z",
+            },
+          ],
+          lastResult: null,
+          sessionSummary: null,
+          sessionSummaryUpdatedAt: null,
+          lastUsage: null,
+          cumulativeUsage: {
+            turns: 0,
+            input: 0,
+            output: 0,
+            cacheRead: 0,
+            cacheWrite: 0,
+            totalTokens: 0,
+            contextTokens: 0,
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+          },
+        }),
+        updateSessionSummary,
+      } as never,
+      {} as never,
+    );
+
+    const result = await instance.compactSession("telegram:200");
+
+    expect(result.ok).toBe(true);
+    expect(compactSession).toHaveBeenCalledWith("telegram:200", "chat");
+    expect(updateSessionSummary).toHaveBeenCalledTimes(1);
   });
 });

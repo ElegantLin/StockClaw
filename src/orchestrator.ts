@@ -78,6 +78,38 @@ export class Orchestrator {
     return this.coordinator.getSessionBacktests(sessionId, limit);
   }
 
+  async compactSession(sessionId: string): Promise<{
+    ok: boolean;
+    message: string;
+  }> {
+    const session = await this.sessions.getSession(sessionId);
+    if (!session || session.transcript.length === 0) {
+      return {
+        ok: false,
+        message: "No active session transcript is available to compact.",
+      };
+    }
+    const result = await this.coordinator.compactSession(sessionId, session.lastIntent ?? "chat");
+    if (!result.compacted) {
+      return {
+        ok: false,
+        message: "No persistent root session was found to compact yet.",
+      };
+    }
+    if (result.summaryMarkdown) {
+      const timestamp = new Date().toISOString();
+      await this.sessions.updateSessionSummary({
+        sessionId,
+        summary: result.summaryMarkdown,
+        timestamp,
+      });
+    }
+    return {
+      ok: true,
+      message: "The active session context was compacted successfully.",
+    };
+  }
+
   async handle(request: UserRequest): Promise<OrchestratorResult> {
     if (isSessionResetCommand(request.message)) {
       const result = await this.handleSessionReset(request);

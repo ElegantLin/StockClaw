@@ -90,6 +90,27 @@ export class ResearchCoordinator {
     await this.spawns.clear(sessionId);
   }
 
+  async compactSession(sessionId: string, intent: string): Promise<{
+    compacted: boolean;
+    summaryMarkdown: string | null;
+  }> {
+    const profile = this.profiles.get(ROOT_AGENT_PROFILE_ID);
+    return this.piRuntime.compactPersistentSession({
+      sessionKey: sessionId,
+      systemPrompt: await this.buildSystemPrompt(profile.id),
+      customTools: this.policy.createTools(profile.id, {
+        sessionKey: sessionId,
+        profileId: profile.id,
+        requestId: `compact:${Date.now()}`,
+        rootUserMessage: "Manually compact the active session context.",
+        requestMetadata: {},
+      }),
+      beforeCompact: async (messages) => {
+        return this.beforeCompactFlush(sessionId, messages, intent);
+      },
+    });
+  }
+
   async getSpawnHistory(sessionId: string, requestId?: string): Promise<SpecialistResult[]> {
     return this.spawns.history(sessionId, requestId);
   }
@@ -172,7 +193,7 @@ export class ResearchCoordinator {
     sessionId: string,
     messages: ConversationMessage[],
     intent: string,
-  ): Promise<{ customInstructions: string }> {
+  ): Promise<{ customInstructions: string; summaryMarkdown: string }> {
     const compactedSummaryBody = await runSessionCompactionSummaryTurn({
       piRuntime: this.piRuntime,
       prompts: this.prompts,
@@ -191,7 +212,7 @@ export class ResearchCoordinator {
       intent,
       sessionSummary: compactedSummaryBody,
     });
-    await writeCompactedSessionSummary({
+    const summary = await writeCompactedSessionSummary({
       memory: this.memory,
       sessionId,
       summaryBody: compactedSummaryBody,
@@ -200,6 +221,7 @@ export class ResearchCoordinator {
     });
     return {
       customInstructions: await loadSessionCompactionPrompt(this.prompts),
+      summaryMarkdown: summary.markdown,
     };
   }
 }
