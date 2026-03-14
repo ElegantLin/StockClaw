@@ -81,6 +81,25 @@ export function buildSessionSummaryMarkdown(params: {
   return lines.join("\n");
 }
 
+export function buildCompactedSessionSummaryMarkdown(params: {
+  sessionId: string;
+  summaryBody: string;
+  lastIntent?: string | null;
+  updatedAt?: string;
+}): string {
+  const body = normalizeCompactionSummaryBody(params.summaryBody);
+  const lines = [
+    "# Live Session Summary",
+    "",
+    `- Session ID: ${params.sessionId}`,
+    `- Last Intent: ${params.lastIntent || "unknown"}`,
+    `- Updated At: ${params.updatedAt || new Date().toISOString()}`,
+    "",
+    body || "## Compressed Context\n\n- No compacted context captured yet.",
+  ];
+  return lines.join("\n");
+}
+
 export async function writeLiveSessionSummary(params: {
   memory: MemoryService;
   sessionId: string;
@@ -92,6 +111,24 @@ export async function writeLiveSessionSummary(params: {
   const markdown = buildSessionSummaryMarkdown({
     sessionId: params.sessionId,
     transcript: params.transcript,
+    lastIntent: params.lastIntent,
+    updatedAt: params.updatedAt,
+  });
+  await params.memory.writeDocument(relativePath, markdown);
+  return { relativePath, markdown };
+}
+
+export async function writeCompactedSessionSummary(params: {
+  memory: MemoryService;
+  sessionId: string;
+  summaryBody: string;
+  lastIntent?: string | null;
+  updatedAt?: string;
+}): Promise<{ relativePath: string; markdown: string }> {
+  const relativePath = buildLiveSessionSummaryPath(params.sessionId);
+  const markdown = buildCompactedSessionSummaryMarkdown({
+    sessionId: params.sessionId,
+    summaryBody: params.summaryBody,
     lastIntent: params.lastIntent,
     updatedAt: params.updatedAt,
   });
@@ -157,6 +194,16 @@ function renderBullets(values: string[], fallback: string): string[] {
 
 function dedupe(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+function normalizeCompactionSummaryBody(markdown: string): string {
+  return markdown
+    .trim()
+    .replace(/^#\s+Live Session Summary\s*\r?\n\r?\n?/i, "")
+    .replace(/^- Session ID:.*\r?\n/i, "")
+    .replace(/^- Last Intent:.*\r?\n/i, "")
+    .replace(/^- Updated At:.*\r?\n?/i, "")
+    .trim();
 }
 
 const COMMON_WORDS = new Set([

@@ -24,7 +24,9 @@ interface RunAgentParams {
   allowedTools?: readonly string[];
   customTools?: ToolDefinition[];
   persistent?: boolean;
-  beforeCompact?: (messages: ConversationMessage[]) => Promise<void>;
+  beforeCompact?: (messages: ConversationMessage[]) => Promise<{
+    customInstructions?: string | null;
+  } | void>;
 }
 
 interface SessionIndex {
@@ -170,20 +172,24 @@ export class PiRuntime {
 
       let compacted = false;
       if (shouldCompact(session.messages, this.llm.chat.compactionThresholdTokens)) {
+        let customCompactionInstructions: string | undefined;
         if (params.beforeCompact) {
-          await params.beforeCompact(toConversationMessages(session.messages));
+          const result = await params.beforeCompact(toConversationMessages(session.messages));
+          customCompactionInstructions = result?.customInstructions ?? undefined;
         }
-        await session.compact(compactionInstructions());
+        await session.compact(customCompactionInstructions || compactionInstructions());
         compacted = true;
       }
 
       await session.prompt(params.userPrompt);
 
       if (shouldCompact(session.messages, this.llm.chat.compactionThresholdTokens)) {
+        let customCompactionInstructions: string | undefined;
         if (params.beforeCompact) {
-          await params.beforeCompact(toConversationMessages(session.messages));
+          const result = await params.beforeCompact(toConversationMessages(session.messages));
+          customCompactionInstructions = result?.customInstructions ?? undefined;
         }
-        await session.compact(compactionInstructions());
+        await session.compact(customCompactionInstructions || compactionInstructions());
         compacted = true;
       }
 

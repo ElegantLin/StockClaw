@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
 
 import { archiveSessionToMemory } from "./memory/session-archive.js";
-import { syncAppSessionSummary } from "./memory/session-summary.js";
+import {
+  syncAppSessionSummary,
+  writeCompactedSessionSummary,
+} from "./memory/session-summary.js";
+import { runSessionCompactionSummaryTurn } from "./memory/session-compaction-summary.js";
 import { buildPortfolioSummary } from "./memory/summary.js";
 import { MemoryService } from "./memory/service.js";
 import {
@@ -30,6 +34,7 @@ import type {
 import { ControlPlaneGateway } from "./control-plane/gateway.js";
 import type { RestartRequestResult } from "./restart/types.js";
 import type { CronJob, CronJobCreateInput, CronJobPatch, CronInspectionPayload } from "./cron/types.js";
+import type { PiRuntime } from "./pi/runtime.js";
 
 export class Orchestrator {
   constructor(
@@ -41,6 +46,7 @@ export class Orchestrator {
     private readonly sessions: SessionService,
     private readonly controlPlane: ControlPlaneGateway,
     private readonly runtimeLogger: RuntimeEventLogger | null = null,
+    private readonly piRuntime: PiRuntime | null = null,
   ) {}
 
   classifyIntent(message: string): IntentType {
@@ -108,10 +114,12 @@ export class Orchestrator {
       usage: specialist.usage,
       timestamp: request.timestamp,
     });
-    const summary = await syncAppSessionSummary({
-      memory: this.memory,
-      session: record,
-    });
+    const summary = specialist.compacted
+      ? await this.buildCompactedSummary(record)
+      : await syncAppSessionSummary({
+          memory: this.memory,
+          session: record,
+        });
     await this.sessions.updateSessionSummary({
       sessionId: record.sessionId,
       summary: summary.markdown,
@@ -248,6 +256,29 @@ export class Orchestrator {
 
   private async buildResponse(request: UserRequest) {
     return this.coordinator.runRootTurn(request);
+  }
+
+  private async buildCompactedSummary(session: AppSessionRecord) {
+    if (!this.piRuntime) {
+      return syncAppSessionSummary({
+        memory: this.memory,
+        session,
+      });
+    }
+    const summaryBody = await runSessionCompactionSummaryTurn({
+      piRuntime: this.piRuntime,
+      prompts: this.prompts,
+      sessionId: session.sessionId,
+      transcript: session.transcript,
+      intent: session.lastIntent ?? "chat",
+    });
+    return writeCompactedSessionSummary({
+      memory: this.memory,
+      sessionId: session.sessionId,
+      summaryBody,
+      lastIntent: session.lastIntent,
+      updatedAt: session.updatedAt,
+    });
   }
 
   private async handleSessionReset(request: UserRequest): Promise<OrchestratorResult> {

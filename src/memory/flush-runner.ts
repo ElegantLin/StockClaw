@@ -10,7 +10,6 @@ import {
   resolveMemoryFlushDate,
   resolveMemoryFlushPrompt,
 } from "./flush.js";
-import { runSessionCompactionSummaryTurn } from "./session-compaction-summary.js";
 
 export async function runMemoryFlushTurn(params: {
   piRuntime: PiRuntime;
@@ -21,6 +20,7 @@ export async function runMemoryFlushTurn(params: {
   sessionId: string;
   transcript: ConversationMessage[];
   intent: string;
+  sessionSummary: string;
   timestamp?: string;
 }): Promise<{ skipped: boolean; message: string; toolCalls: ToolCallRecord[] }> {
   const date = resolveMemoryFlushDate(params.timestamp);
@@ -29,13 +29,6 @@ export async function runMemoryFlushTurn(params: {
   const prompt = resolveMemoryFlushPrompt(promptTemplate, params.timestamp);
   const memoryContext = await loadDurableMemory(params.memory);
   const portfolioSnapshot = await params.portfolio.load();
-  const sessionSummary = await runSessionCompactionSummaryTurn({
-    piRuntime: params.piRuntime,
-    prompts: params.prompts,
-    sessionId: params.sessionId,
-    transcript: params.transcript,
-    intent: params.intent,
-  });
 
   const run = await params.piRuntime.runEphemeral({
     sessionKey: `${params.sessionId}:memory-flush:${Date.now()}`,
@@ -53,7 +46,7 @@ export async function runMemoryFlushTurn(params: {
       memoryContext || "(none)",
       "",
       "Current session compaction summary:",
-      sessionSummary || "(none)",
+      params.sessionSummary.trim() || "(none)",
     ].join("\n"),
     customTools: params.policy.createNamedTools(["memory_read", "memory_append_daily_log"], {
       sessionKey: params.sessionId,

@@ -169,6 +169,7 @@ export async function createApplicationRuntime(
     sessions,
     controlPlane,
     runtimeLogger,
+    piRuntime,
   );
   cron.setRunner({
     run: async (request) => (await orchestrator.handle(request)).response,

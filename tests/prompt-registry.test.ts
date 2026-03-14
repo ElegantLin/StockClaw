@@ -26,7 +26,7 @@ describe("PromptRegistry", () => {
     await expect(registry.composeWorkflowPrompt("general_chat")).resolves.toContain("General Chat");
     await expect(registry.composeWorkflowPrompt("memory_flush")).resolves.toContain("pre-compaction");
     await expect(registry.composeWorkflowPrompt("session_compaction_summary")).resolves.toContain(
-      "Summarize the entire current session",
+      "## Compressed Context",
     );
   });
 

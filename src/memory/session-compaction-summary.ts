@@ -9,15 +9,14 @@ export async function runSessionCompactionSummaryTurn(params: {
   transcript: ConversationMessage[];
   intent: string;
 }): Promise<string> {
-  const systemPrompt = await params.prompts.composeWorkflowPrompt("session_compaction_summary/10_system");
-  const userPrompt = await params.prompts.composeWorkflowPrompt("session_compaction_summary/20_user");
+  const workflowPrompt = await loadSessionCompactionPrompt(params.prompts);
   const transcript = formatTranscriptForCompactionSummary(params.transcript);
 
   const run = await params.piRuntime.runEphemeral({
     sessionKey: `${params.sessionId}:session-compaction-summary:${Date.now()}`,
-    systemPrompt,
+    systemPrompt: workflowPrompt,
     userPrompt: [
-      userPrompt,
+      "Summarize the transcript below for future continuity after context compaction.",
       "",
       `Current intent: ${params.intent}`,
       "",
@@ -28,6 +27,10 @@ export async function runSessionCompactionSummaryTurn(params: {
   });
 
   return run.message.trim();
+}
+
+export async function loadSessionCompactionPrompt(prompts: PromptRegistry): Promise<string> {
+  return prompts.composeWorkflowPrompt("session_compaction_summary");
 }
 
 export function formatTranscriptForCompactionSummary(messages: ConversationMessage[]): string {

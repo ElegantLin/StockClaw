@@ -128,6 +128,7 @@ export interface SpecialistResult {
   sessionId: string;
   message: string;
   toolCalls: ToolCallRecord[];
+  compacted?: boolean;
   usage?: UsageAggregate;
   requestId?: string;
   task?: string;

@@ -1,8 +1,12 @@
 import path from "node:path";
 
 import type { MemoryService } from "../memory/service.js";
-import { writeLiveSessionSummary } from "../memory/session-summary.js";
+import { writeCompactedSessionSummary } from "../memory/session-summary.js";
 import { runMemoryFlushTurn } from "../memory/flush-runner.js";
+import {
+  loadSessionCompactionPrompt,
+  runSessionCompactionSummaryTurn,
+} from "../memory/session-compaction-summary.js";
 import {
   DURABLE_MEMORY_CATEGORIES,
   ROOT_BOOTSTRAP_MEMORY_FILES,
@@ -63,7 +67,7 @@ export class ResearchCoordinator {
         requestMetadata: request.metadata,
       }),
       beforeCompact: async (messages) => {
-        await this.beforeCompactFlush(request.sessionId, messages, "chat");
+        return this.beforeCompactFlush(request.sessionId, messages, "chat");
       },
     });
     await this.runtimeLogger?.info({
@@ -78,7 +82,7 @@ export class ResearchCoordinator {
         toolCallCount: run.toolCalls.length,
       },
     });
-    return toSpecialist(profile.id, run.message, run.sessionId, run.toolCalls, run.usage);
+    return toSpecialist(profile.id, run.message, run.sessionId, run.toolCalls, run.compacted, run.usage);
   }
 
   async resetSession(sessionId: string): Promise<void> {
@@ -168,7 +172,14 @@ export class ResearchCoordinator {
     sessionId: string,
     messages: ConversationMessage[],
     intent: string,
-  ): Promise<void> {
+  ): Promise<{ customInstructions: string }> {
+    const compactedSummaryBody = await runSessionCompactionSummaryTurn({
+      piRuntime: this.piRuntime,
+      prompts: this.prompts,
+      sessionId,
+      transcript: messages,
+      intent,
+    });
     await runMemoryFlushTurn({
       piRuntime: this.piRuntime,
       prompts: this.prompts,
@@ -178,14 +189,18 @@ export class ResearchCoordinator {
       sessionId,
       transcript: messages,
       intent,
+      sessionSummary: compactedSummaryBody,
     });
-    await writeLiveSessionSummary({
+    await writeCompactedSessionSummary({
       memory: this.memory,
       sessionId,
-      transcript: messages,
+      summaryBody: compactedSummaryBody,
       lastIntent: intent,
       updatedAt: new Date().toISOString(),
     });
+    return {
+      customInstructions: await loadSessionCompactionPrompt(this.prompts),
+    };
   }
 }
 
@@ -194,9 +209,10 @@ function toSpecialist(
   message: string,
   sessionId: string,
   toolCalls: ToolCallRecord[],
+  compacted: boolean,
   usage?: SpecialistResult["usage"],
 ): SpecialistResult {
-  return { role, message, sessionId, toolCalls, usage };
+  return { role, message, sessionId, toolCalls, compacted, usage };
 }
 
 function buildDelegationHint(userMessage: string): string {

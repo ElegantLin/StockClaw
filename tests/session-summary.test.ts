@@ -7,8 +7,10 @@ import { describe, expect, it } from "vitest";
 import { MemoryService } from "../src/memory/service.js";
 import {
   buildArchiveSlug,
+  buildCompactedSessionSummaryMarkdown,
   buildSessionSummaryMarkdown,
   extractSessionInsights,
+  writeCompactedSessionSummary,
   writeLiveSessionSummary,
 } from "../src/memory/session-summary.js";
 
@@ -111,5 +113,56 @@ describe("session summary memory", () => {
     expect(markdown).toContain("Risk And Portfolio Constraints");
     expect(markdown).toContain("Pending Trade Intentions");
     expect(markdown).toContain("Practical conclusion");
+  });
+
+  it("writes a live summary file from LLM compaction body with code-owned metadata", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "stock-claw-compacted-summary-"));
+    const memory = new MemoryService(dir);
+    const result = await writeCompactedSessionSummary({
+      memory,
+      sessionId: "telegram:6544808656",
+      lastIntent: "investment_research",
+      updatedAt: "2026-03-14T00:00:03.000Z",
+      summaryBody: [
+        "## Compressed Context",
+        "",
+        "- Reviewed AAPL and MSFT with focus on near-term positioning.",
+        "",
+        "## Durable Preferences And Constraints",
+        "",
+        "- Keep single-position exposure below 15%.",
+      ].join("\n"),
+    });
+
+    const saved = await readFile(path.join(dir, "sessions", "live", "telegram-6544808656.md"), "utf8");
+    expect(result.relativePath).toBe("sessions/live/telegram-6544808656.md");
+    expect(saved).toContain("# Live Session Summary");
+    expect(saved).toContain("- Session ID: telegram:6544808656");
+    expect(saved).toContain("## Compressed Context");
+    expect(saved).toContain("Keep single-position exposure below 15%");
+  });
+
+  it("removes duplicated summary heading and metadata when wrapping a compacted summary body", () => {
+    const markdown = buildCompactedSessionSummaryMarkdown({
+      sessionId: "session-aapl",
+      lastIntent: "trade_request",
+      updatedAt: "2026-03-14T00:00:03.000Z",
+      summaryBody: [
+        "# Live Session Summary",
+        "",
+        "- Session ID: stale",
+        "- Last Intent: stale",
+        "- Updated At: stale",
+        "",
+        "## Compressed Context",
+        "",
+        "- Focus on pending AAPL review.",
+      ].join("\n"),
+    });
+
+    expect(markdown).toContain("- Session ID: session-aapl");
+    expect(markdown).not.toContain("- Session ID: stale");
+    expect(markdown).toContain("## Compressed Context");
+    expect(markdown).not.toContain("# Live Session Summary\n\n# Live Session Summary");
   });
 });
