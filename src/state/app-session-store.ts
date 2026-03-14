@@ -33,8 +33,6 @@ export class AppSessionStore extends JsonFileStore<SessionStoreState> {
         sessionSummaryUpdatedAt: null,
         lastUsage: null,
         cumulativeUsage: emptyUsageAggregate(),
-        dailyUsage: emptyUsageAggregate(),
-        dailyUsageDate: null,
       };
       store[params.sessionId] = record;
       return record;
@@ -78,10 +76,6 @@ export class AppSessionStore extends JsonFileStore<SessionStoreState> {
       if (params.usage) {
         record.lastUsage = snapshotFromAggregate(params.usage);
         record.cumulativeUsage = mergeUsage(record.cumulativeUsage, params.usage);
-        const usageDate = toShanghaiDateKey(ts);
-        const nextDailyUsage = record.dailyUsageDate === usageDate ? record.dailyUsage : emptyUsageAggregate();
-        record.dailyUsage = mergeUsage(nextDailyUsage, params.usage);
-        record.dailyUsageDate = usageDate;
       }
       record.updatedAt = ts;
       record.transcript.push({
@@ -166,8 +160,6 @@ function normalizeRecord(sessionId: string, record: Partial<AppSessionRecord>): 
     sessionSummaryUpdatedAt: record.sessionSummaryUpdatedAt ?? null,
     lastUsage: normalizeUsageSnapshot(record.lastUsage),
     cumulativeUsage: normalizeUsageAggregate(record.cumulativeUsage),
-    dailyUsage: normalizeUsageAggregate(record.dailyUsage),
-    dailyUsageDate: typeof record.dailyUsageDate === "string" ? record.dailyUsageDate : null,
   };
 }
 
@@ -257,18 +249,4 @@ function mergeUsage(current: UsageAggregate, next: UsageAggregate): UsageAggrega
 
 function numeric(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function toShanghaiDateKey(timestamp: string): string {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  const parts = formatter.formatToParts(new Date(timestamp));
-  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
-  const month = parts.find((part) => part.type === "month")?.value ?? "01";
-  const day = parts.find((part) => part.type === "day")?.value ?? "01";
-  return `${year}-${month}-${day}`;
 }

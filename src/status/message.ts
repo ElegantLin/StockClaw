@@ -7,16 +7,6 @@ export function buildStatusMessage(params: {
   runtime?: RuntimeInspectionPayload | null;
 }): string {
   const lastUsage = params.session.lastUsage ?? null;
-  const dailyUsage = params.session.dailyUsage ?? {
-    turns: 0,
-    input: 0,
-    output: 0,
-    cacheRead: 0,
-    cacheWrite: 0,
-    totalTokens: 0,
-    contextTokens: 0,
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-  };
   const lines = [
     "🧭 Session Status",
     "",
@@ -27,7 +17,6 @@ export function buildStatusMessage(params: {
     "",
     "📊 Usage:",
     `- Last Turn: turns=${lastUsage ? 1 : 0} ↑${lastUsage?.input ?? 0} ↓${lastUsage?.output ?? 0} total=${lastUsage?.totalTokens ?? 0} cost=${(lastUsage?.cost.total ?? 0).toFixed(6)}`,
-    `- Today Total (Asia/Shanghai): turns=${dailyUsage.turns} ↑${dailyUsage.input} ↓${dailyUsage.output} total=${dailyUsage.totalTokens} cost=${dailyUsage.cost.total.toFixed(6)}`,
     "",
     `Transcript Entries: ${params.session.transcriptEntries}`,
     `Spawned Specialists: ${params.session.specialistCount}`,

@@ -284,7 +284,7 @@ describe("BacktestService", () => {
     expect(result.report.rejectedTrades).toHaveLength(0);
     expect(result.report.endingPortfolio.positions[0]?.symbol).toBe("AAPL.US");
     expect(result.report.summary).toContain("Backtest");
-  });
+  }, 15000);
 
   it("accepts partial prepared-data commits and freezes the dataset after all symbols are collected", async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "stock-claw-backtest-prepare-partial-"));

@@ -584,16 +584,6 @@ describe("TelegramExtension", () => {
           compactionThresholdTokens: 76800,
         },
         lastUsage: null,
-        dailyUsage: {
-          turns: 0,
-          input: 0,
-          output: 0,
-          cacheRead: 0,
-          cacheWrite: 0,
-          totalTokens: 0,
-          contextTokens: 0,
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-        },
         specialistCount: 2,
         specialists: [
           { role: "value_analyst", sessionId: "s1", message: "m1", toolCalls: [] },
@@ -704,7 +694,6 @@ describe("TelegramExtension", () => {
     expect(orchestrator.getSessionStatus).toHaveBeenCalledTimes(1);
     expect(sent.some((item) => item.text.includes("Session Status"))).toBe(true);
     expect(sent.some((item) => item.text.includes("Context Tokens"))).toBe(true);
-    expect(sent.some((item) => item.text.includes("Today Total (Asia/Shanghai)"))).toBe(true);
     expect(sent.some((item) => item.text.includes("value_analyst"))).toBe(true);
     expect(sent.some((item) => item.text.includes("Backtests"))).toBe(true);
     expect(sent.some((item) => item.text.includes("job-2"))).toBe(true);

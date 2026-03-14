@@ -133,7 +133,6 @@ export class SessionSpawnService {
       updatedAt: session.updatedAt,
       contextUsage: resolveSessionContextUsage(session, this.contextWindow, this.compactionThresholdTokens),
       lastUsage: session.lastUsage,
-      dailyUsage: session.dailyUsage,
       specialistCount: specialists.length,
       specialists,
       backtests: {
