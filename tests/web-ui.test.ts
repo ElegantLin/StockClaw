@@ -11,8 +11,10 @@ describe("web control panel", () => {
   it("renders the control panel shell", () => {
     const html = renderControlPanelHtml();
     expect(html).toContain("stock-claw Control Panel");
-    expect(html).toContain("Session");
-    expect(html).toContain("Portfolio");
+    expect(html).toContain("StockClaw Research Desk");
+    expect(html).toContain("Paper portfolio overview");
+    expect(html).toContain("Agent activity");
+    expect(html).toContain("分析单只股票");
     expect(html).toContain("/api/sessions");
   });
 
@@ -20,11 +22,13 @@ describe("web control panel", () => {
     const script = renderControlPanelClientScript();
     expect(script).toContain("function renderMarkdown(markdown)");
     expect(script).toContain('class="markdown"');
+    expect(script).toContain('document.querySelectorAll("[data-prompt]")');
   });
 
   it("includes markdown styles for rendered content", () => {
     expect(CONTROL_PANEL_STYLES).toContain(".markdown {");
     expect(CONTROL_PANEL_STYLES).toContain(".code-block {");
+    expect(CONTROL_PANEL_STYLES).toContain(".summary-panel {");
   });
 });
 

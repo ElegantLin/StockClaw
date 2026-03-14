@@ -14,6 +14,13 @@ export function renderControlPanelClientScript(): string {
 
       const byId = (id) => document.getElementById(id);
       const pretty = (value) => JSON.stringify(value, null, 2);
+      const shortText = (value, limit = 160) => {
+        const normalized = String(value || "").replace(/\\s+/g, " ").trim();
+        if (!normalized) {
+          return "";
+        }
+        return normalized.length > limit ? normalized.slice(0, limit - 1) + "…" : normalized;
+      };
       const escapeHtml = (value) => String(value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -157,10 +164,21 @@ export function renderControlPanelClientScript(): string {
       function renderSpawnActivity(spawns) {
         const lines = [];
         const list = Array.isArray(spawns) ? spawns : [];
+        const activityList = byId("agentActivityList");
         if (!list.length) {
           byId("spawnOutput").value = "No spawned subagents for this session yet.";
+          activityList.innerHTML = '<div class="empty-inline">No spawned specialists for this session yet.</div>';
           return;
         }
+        activityList.innerHTML = list.map((spawn) => {
+          const toolCalls = Array.isArray(spawn.toolCalls) ? spawn.toolCalls : [];
+          const callSummary = toolCalls.length
+            ? toolCalls.slice(0, 2).map((call) => call.toolName || "unknown").join(" · ")
+            : "No tool calls captured";
+          return '<article class="activity-item"><strong>' + escapeHtml(spawn.role || "unknown") + '</strong><span>' +
+            escapeHtml(shortText(spawn.task || spawn.message || "Spawned for analysis", 120)) +
+            '</span><small>' + escapeHtml(callSummary) + "</small></article>";
+        }).join("");
         for (const spawn of list) {
           lines.push("[" + (spawn.role || "unknown") + "] " + (spawn.sessionId || ""));
           if (spawn.task) {
@@ -183,8 +201,10 @@ export function renderControlPanelClientScript(): string {
       function renderRuntime(payload) {
         state.runtimeData = payload;
         const status = payload?.status || {};
+        const cron = payload?.cron || null;
         byId("runtimeOutput").value = pretty({
           status,
+          cron,
           mcp: payload?.mcp || [],
         });
         byId("memoryArtifacts").value = pretty(payload?.recentMemory || []);
@@ -194,6 +214,21 @@ export function renderControlPanelClientScript(): string {
         byId("healthBadge").textContent = status.reloadInFlight
           ? "Runtime reloading..."
           : "Daemon online · started " + started;
+        byId("runtimeBadge").textContent = status.reloadInFlight ? "Reloading" : "Healthy";
+        byId("runtimeSummaryPreview").textContent = shortText(
+          "Reload count " + Number(status.reloadCount || 0) + ", " +
+          Number((payload?.skills || []).length) + " skills, " +
+          Number((payload?.mcp || []).length) + " MCP entries.",
+          120,
+        ) || "Runtime status unavailable.";
+        byId("runtimeMeta").textContent = "Last reload: " + reload + (status.lastReloadReason ? " (" + status.lastReloadReason + ")" : "");
+        byId("tasksBadge").textContent = cron?.activeJobCount ? "Active" : "Quiet";
+        byId("tasksSummaryPreview").textContent = cron
+          ? shortText("Cron jobs: " + Number(cron.jobCount || 0) + ", active " + Number(cron.activeJobCount || 0) + ", running " + Number(cron.runningJobCount || 0) + ".", 120)
+          : "No runtime task data yet.";
+        byId("tasksMeta").textContent = cron?.lastTickAt
+          ? "Last scheduler tick " + new Date(cron.lastTickAt).toLocaleString()
+          : "Backtests and cron jobs refresh with runtime state.";
         setStatus("runtimeStatus", "Last reload: " + reload + (status.lastReloadReason ? " (" + status.lastReloadReason + ")" : ""));
       }
 
@@ -290,6 +325,12 @@ export function renderControlPanelClientScript(): string {
         byId("sessionId").value = session?.sessionId || "";
         byId("userId").value = session?.userId || state.userId;
         byId("sessionSummary").value = session?.sessionSummary || "";
+        byId("sessionBadge").textContent = session?.lastIntent ? String(session.lastIntent) : "Live";
+        byId("sessionSummaryPreview").textContent = shortText(session?.sessionSummary || "No session summary yet.", 140) || "No session summary yet.";
+        byId("sessionMeta").textContent = shortText(
+          "User " + (session?.userId || state.userId) + (session?.updatedAt ? " · updated " + new Date(session.updatedAt).toLocaleString() : ""),
+          120,
+        );
         renderChat(session);
       }
 
@@ -314,7 +355,22 @@ export function renderControlPanelClientScript(): string {
         const stats = computePortfolioStats(snapshot);
         const pnlLine = byId("totalPnlLine");
         const pnlPercent = stats.totalCost > 0 ? (stats.totalPnl / stats.totalCost) * 100 : 0;
+        const largest = positions
+          .map((item) => {
+            const quantity = Number(item.quantity || 0);
+            const marketValue = Number.isFinite(item.marketValue) ? Number(item.marketValue) : quantity * Number(item.marketPrice || 0);
+            return {
+              symbol: item.symbol || "UNKNOWN",
+              marketValue,
+            };
+          })
+          .sort((a, b) => b.marketValue - a.marketValue)[0];
         byId("totalValue").textContent = Number(snapshot?.equity || stats.totalValue || 0).toFixed(2);
+        byId("cashValue").textContent = "$" + Number(snapshot?.cash || 0).toFixed(2);
+        byId("positionCount").textContent = String(positions.length);
+        byId("largestPosition").textContent = largest
+          ? largest.symbol + " · $" + Number(largest.marketValue || 0).toFixed(0)
+          : "--";
         pnlLine.textContent = "PnL " + (stats.totalPnl >= 0 ? "+" : "") + stats.totalPnl.toFixed(2) + " (" + pnlPercent.toFixed(2) + "%)";
         pnlLine.classList.toggle("up", stats.totalPnl >= 0);
         pnlLine.classList.toggle("down", stats.totalPnl < 0);
@@ -329,8 +385,11 @@ export function renderControlPanelClientScript(): string {
               const avgPrice = Number(item.avgCost || 0);
               const pnl = quantity * (currentPrice - avgPrice);
               const pnlPercentItem = avgPrice > 0 ? ((currentPrice - avgPrice) / avgPrice) * 100 : 0;
+              const marketValue = Number.isFinite(item.marketValue) ? Number(item.marketValue) : quantity * currentPrice;
+              const totalEquity = Number(snapshot?.equity || stats.totalValue || 0);
+              const weight = totalEquity > 0 ? (marketValue / totalEquity) * 100 : 0;
               const direction = pnl >= 0 ? "up" : "down";
-              return '<article class="holding"><div class="holding-head"><div><strong>' + escapeHtml(item.symbol || "UNKNOWN") + '</strong><div class="meta">' + escapeHtml(item.name || "Unnamed") + '</div></div><div><strong>$' + currentPrice.toFixed(2) + '</strong><div class="meta">' + quantity + " shares" + '</div></div></div><div class="holding-foot"><small>Avg $' + avgPrice.toFixed(2) + '</small><span class="pill ' + direction + '">' + (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + " / " + pnlPercentItem.toFixed(2) + '%</span></div></article>';
+              return '<article class="holding"><div class="holding-head"><div><strong>' + escapeHtml(item.symbol || "UNKNOWN") + '</strong><div class="meta">' + escapeHtml(item.name || "Unnamed") + '</div></div><div><strong>$' + currentPrice.toFixed(2) + '</strong><div class="meta">' + quantity + " shares · " + weight.toFixed(1) + '%</div></div></div><div class="holding-foot"><small>Avg $' + avgPrice.toFixed(2) + " · Value $" + marketValue.toFixed(2) + '</small><span class="pill ' + direction + '">' + (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + " / " + pnlPercentItem.toFixed(2) + '%</span></div></article>';
             }).join("")
           : '<div class="holding"><strong>No positions</strong><div class="meta">Import or update the paper portfolio to begin.</div></div>';
       }
@@ -515,6 +574,14 @@ export function renderControlPanelClientScript(): string {
       byId("refreshRuntimeButton").addEventListener("click", () => refreshRuntime());
       byId("reloadRuntimeButton").addEventListener("click", () => reloadRuntime());
       byId("restartRuntimeButton").addEventListener("click", () => restartRuntime());
+      document.querySelectorAll("[data-prompt]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const prompt = button.getAttribute("data-prompt") || "";
+          byId("messageInput").value = prompt;
+          byId("messageInput").focus();
+          updateComposerOffset();
+        });
+      });
       window.addEventListener("resize", updateComposerOffset);
 
       await refreshHealth();
