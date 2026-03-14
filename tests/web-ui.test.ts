@@ -11,7 +11,8 @@ describe("web control panel", () => {
   it("renders the control panel shell", () => {
     const html = renderControlPanelHtml();
     expect(html).toContain("stock-claw Control Panel");
-    expect(html).toContain("StockClaw Research Desk");
+    expect(html).toContain("StockClaw");
+    expect(html).toContain("Research Desk");
     expect(html).toContain("Paper portfolio overview");
     expect(html).toContain("Agent activity");
     expect(html).toContain("分析单只股票");

@@ -116,11 +116,12 @@ export class MemoryService {
     from?: number;
     lines?: number;
   }): Promise<{ path: string; from: number; lines: number; text: string } | null> {
-    const normalized = params.relativePath.replace(/\\/g, "/").replace(/^memory\//, "");
-    const target = path.resolve(this.root, normalized);
-    if (!target.startsWith(path.resolve(this.root))) {
-      throw new Error("memory_get path must stay inside the memory root.");
+    const resolved = resolveMemoryLookupReference(this.root, params.relativePath);
+    if (!resolved) {
+      return null;
     }
+
+    const target = path.resolve(this.root, resolved.relativePath);
 
     let content: string;
     try {
@@ -130,8 +131,12 @@ export class MemoryService {
     }
 
     const allLines = content.split(/\r?\n/);
-    const from = Math.max(1, Math.floor(params.from ?? 1));
-    const lineCount = Math.max(1, Math.floor(params.lines ?? Math.min(40, allLines.length)));
+    const from = Math.max(1, Math.floor(params.from ?? resolved.from ?? 1));
+    const parsedLines =
+      params.lines ??
+      resolved.lines ??
+      Math.min(40, allLines.length);
+    const lineCount = Math.max(1, Math.floor(parsedLines));
     const slice = allLines.slice(from - 1, from - 1 + lineCount).join("\n").trimEnd();
     return {
       path: path.relative(rootDir(), target).replaceAll("\\", "/"),
@@ -242,6 +247,74 @@ function classifyMemoryArtifact(relativePath: string): MemoryArtifact["category"
 
 function rootDir(): string {
   return path.resolve(".");
+}
+
+function resolveMemoryLookupReference(
+  memoryRoot: string,
+  rawReference: string,
+): { relativePath: string; from?: number; lines?: number } | null {
+  const trimmed = String(rawReference || "").trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const { pathPart, from, lines } = parseCitation(trimmed);
+  const normalizedSlashes = pathPart.replace(/\\/g, "/").replace(/^memory\//i, "").replace(/^\/+/, "");
+
+  const root = path.resolve(memoryRoot);
+  let relativePath = normalizedSlashes;
+
+  if (looksLikeAbsolutePath(pathPart)) {
+    const absolute = path.resolve(pathPart);
+    const relative = path.relative(root, absolute);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) {
+      return null;
+    }
+    relativePath = relative.replace(/\\/g, "/");
+  }
+
+  const normalizedRelative = path.posix.normalize(relativePath);
+  if (
+    !normalizedRelative ||
+    normalizedRelative === "." ||
+    normalizedRelative.startsWith("../") ||
+    normalizedRelative === ".."
+  ) {
+    return null;
+  }
+
+  const target = path.resolve(root, normalizedRelative);
+  const relative = path.relative(root, target);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return null;
+  }
+
+  return {
+    relativePath: relative.replace(/\\/g, "/"),
+    from,
+    lines,
+  };
+}
+
+function parseCitation(reference: string): { pathPart: string; from?: number; lines?: number } {
+  const match = reference.match(/^(.*?)(?:#L(\d+)(?:-L?(\d+))?)?$/i);
+  if (!match) {
+    return { pathPart: reference };
+  }
+
+  const pathPart = (match[1] || reference).trim();
+  const from = match[2] ? Number(match[2]) : undefined;
+  const to = match[3] ? Number(match[3]) : undefined;
+  const lines = from && to && to >= from ? to - from + 1 : undefined;
+  return { pathPart, from, lines };
+}
+
+function looksLikeAbsolutePath(value: string): boolean {
+  return (
+    path.isAbsolute(value) ||
+    /^[A-Za-z]:[\\/]/.test(value) ||
+    value.startsWith("\\\\")
+  );
 }
 
 function classifyPathCategory(relativePath: string): string {

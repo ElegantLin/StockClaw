@@ -33,4 +33,53 @@ describe("MemoryService search and snippet reads", () => {
     expect(snippet?.text).toContain("Avoid China ADRs");
     expect(snippet?.text).toContain("15%");
   });
+
+  it("reads snippets from memory_search-style citations and normalized paths", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "stock-claw-memory-search-"));
+    await mkdir(path.join(root, "non-investment"), { recursive: true });
+    await writeFile(
+      path.join(root, "non-investment", "USER.md"),
+      [
+        "# USER.md",
+        "",
+        "- Avoid China ADRs",
+        "- Keep single position size below 15%",
+        "- Prefer pullbacks after catalyst confirmation",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const memory = new MemoryService(root);
+    const citationSnippet = await memory.readSnippet({
+      relativePath: "memory/non-investment/USER.md#L3-L4",
+    });
+    expect(citationSnippet?.from).toBe(3);
+    expect(citationSnippet?.lines).toBe(2);
+    expect(citationSnippet?.text).toContain("Avoid China ADRs");
+    expect(citationSnippet?.text).toContain("15%");
+
+    const slashSnippet = await memory.readSnippet({
+      relativePath: "non-investment\\USER.md#L4-L4",
+    });
+    expect(slashSnippet?.from).toBe(4);
+    expect(slashSnippet?.lines).toBe(1);
+    expect(slashSnippet?.text).toContain("15%");
+
+    const absoluteSnippet = await memory.readSnippet({
+      relativePath: `${path.join(root, "non-investment", "USER.md")}#L5-L5`,
+    });
+    expect(absoluteSnippet?.from).toBe(5);
+    expect(absoluteSnippet?.lines).toBe(1);
+    expect(absoluteSnippet?.text).toContain("Prefer pullbacks");
+  });
+
+  it("returns null for paths outside the memory root instead of throwing", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "stock-claw-memory-search-"));
+    await mkdir(path.join(root, "non-investment"), { recursive: true });
+    await writeFile(path.join(root, "non-investment", "USER.md"), "# USER.md\n", "utf8");
+
+    const memory = new MemoryService(root);
+    await expect(memory.readSnippet({ relativePath: "../outside.md#L1-L3" })).resolves.toBeNull();
+  });
 });

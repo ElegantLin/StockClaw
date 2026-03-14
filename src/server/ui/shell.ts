@@ -14,8 +14,8 @@ ${styles}
       <main class="chat-shell">
         <header class="topbar">
           <div class="title-group">
-            <span class="eyebrow">StockClaw Research Desk</span>
-            <strong>Agentic investing, paper trading, and backtests in one workspace.</strong>
+            <span class="eyebrow">StockClaw</span>
+            <strong>Research Desk</strong>
             <span id="sessionCaption">Session not created</span>
           </div>
           <div class="topbar-meta">
@@ -24,10 +24,6 @@ ${styles}
         </header>
 
         <section class="quick-strip">
-          <div class="quick-copy">
-            <strong>Start from intent, not config.</strong>
-            <span>Ask for a stock thesis, a portfolio review, a backtest, or a scheduled watchlist check.</span>
-          </div>
           <div class="quick-actions" id="quickActions">
             <button class="chip" type="button" data-prompt="分析一下我的当前组合，给出风险和优先处理项。">检查当前组合</button>
             <button class="chip" type="button" data-prompt="分析一下长江电力，给我一个投资结论，先看技术面，再看新闻和价值面。">分析单只股票</button>

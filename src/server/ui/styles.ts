@@ -87,10 +87,10 @@ export const CONTROL_PANEL_STYLES = `
         top: 0;
         z-index: 4;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
-        gap: 18px;
-        padding: 22px 26px 18px;
+        gap: 14px;
+        padding: 14px 20px 12px;
         background: linear-gradient(180deg, oklch(0.19 0.01 255 / 0.98) 0%, oklch(0.19 0.01 255 / 0.9) 100%);
         border-bottom: 1px solid oklch(0.34 0.02 255 / 0.68);
         backdrop-filter: blur(12px);
@@ -113,15 +113,15 @@ export const CONTROL_PANEL_STYLES = `
       .title-group {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 4px;
       }
 
       .title-group strong {
-        font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-        font-size: clamp(24px, 2.8vw, 34px);
+        font-family: "Aptos Display", "Segoe UI Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+        font-size: 18px;
         line-height: 1.1;
-        letter-spacing: -0.03em;
-        max-width: 14ch;
+        letter-spacing: -0.02em;
+        max-width: none;
       }
 
       .title-group span {
@@ -130,7 +130,7 @@ export const CONTROL_PANEL_STYLES = `
 
       .eyebrow {
         text-transform: uppercase;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.14em;
         color: oklch(0.82 0.04 208);
       }
 
@@ -141,7 +141,7 @@ export const CONTROL_PANEL_STYLES = `
       }
 
       .badge {
-        padding: 9px 12px;
+        padding: 8px 10px;
         border-radius: 999px;
         border: 1px solid oklch(0.4 0.03 255 / 0.86);
         color: var(--ink-soft);
@@ -150,37 +150,20 @@ export const CONTROL_PANEL_STYLES = `
       }
 
       .quick-strip {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) minmax(0, 1.5fr);
-        gap: 18px;
-        align-items: start;
-        padding: 18px 26px 10px;
-        border-bottom: 1px solid oklch(0.32 0.01 255 / 0.46);
-      }
-
-      .quick-copy {
         display: flex;
-        flex-direction: column;
-        gap: 6px;
-        max-width: 36ch;
-      }
-
-      .quick-copy strong {
-        font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-        font-size: 18px;
-        letter-spacing: -0.02em;
-      }
-
-      .quick-copy span {
-        color: var(--ink-soft);
-        line-height: 1.5;
-        font-size: 13px;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 10px 20px 8px;
+        border-bottom: 1px solid oklch(0.32 0.01 255 / 0.46);
+        overflow-x: auto;
       }
 
       .quick-actions {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+        min-width: max-content;
       }
 
       .chip {
@@ -188,7 +171,7 @@ export const CONTROL_PANEL_STYLES = `
         background: oklch(0.25 0.02 255 / 0.85);
         color: var(--ink);
         border-radius: 999px;
-        padding: 10px 14px;
+        padding: 8px 12px;
         text-align: left;
       }
 
@@ -200,7 +183,7 @@ export const CONTROL_PANEL_STYLES = `
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        padding: 26px 24px calc(var(--composer-offset, 220px) + 30px);
+        padding: 16px 20px calc(var(--composer-offset, 220px) + 22px);
       }
 
       .chat-stack {
@@ -450,7 +433,7 @@ export const CONTROL_PANEL_STYLES = `
         left: 0;
         right: 0;
         bottom: 0;
-        padding: 30px 24px 18px;
+        padding: 20px 20px 14px;
         background: linear-gradient(180deg, oklch(0.19 0.01 255 / 0) 0%, oklch(0.19 0.01 255 / 0.78) 26%, oklch(0.17 0.01 250 / 0.98) 100%);
       }
 
@@ -472,8 +455,8 @@ export const CONTROL_PANEL_STYLES = `
         background: transparent;
         color: var(--ink);
         border: 0;
-        padding: 18px 20px 14px;
-        min-height: 124px;
+        padding: 16px 18px 12px;
+        min-height: 96px;
         resize: vertical;
       }
 
@@ -840,10 +823,6 @@ export const CONTROL_PANEL_STYLES = `
           grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
         }
 
-        .quick-strip {
-          grid-template-columns: 1fr;
-        }
-
         .metric-grid {
           grid-template-columns: 1fr;
         }
@@ -882,8 +861,8 @@ export const CONTROL_PANEL_STYLES = `
         }
 
         .topbar {
-          flex-direction: column;
-          align-items: stretch;
+          flex-direction: row;
+          align-items: center;
         }
 
         .title-group strong {
