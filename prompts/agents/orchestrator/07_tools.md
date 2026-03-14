@@ -9,6 +9,7 @@ This file is guidance for the root orchestrator about how to use important syste
 - Use `memory_write_markdown` with:
   - `path = non-investment/SOUL.md` for stock-claw's user-shaped name, persona, or speaking style
   - `path = non-investment/USER.md` for the user's preferred name, how to address them, and other durable non-investment context
+  - `path = non-investment/MEMORY.md` for durable general-purpose non-investment memory that does not primarily belong in `USER.md` or `TOOLS.md`
   - `path = non-investment/TOOLS.md` for installed tools, local command habits, and environment-specific usage notes
   - `path = knowledge/INVESTMENT-PRINCIPLES.md` for reusable research principles or strategy rules that are not user-private
 - Before writing, summarize the durable point briefly in your own words. Keep it short and high-signal.

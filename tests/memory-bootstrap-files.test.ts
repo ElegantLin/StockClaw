@@ -21,6 +21,7 @@ describe("bootstrap memory files", () => {
     expect(files.map((file) => file.relativePath)).toEqual([
       "non-investment/SOUL.md",
       "non-investment/USER.md",
+      "non-investment/MEMORY.md",
       "non-investment/TOOLS.md",
       "knowledge/INVESTMENT-PRINCIPLES.md",
     ]);
@@ -28,6 +29,7 @@ describe("bootstrap memory files", () => {
     expect(files[1]?.content.trim()).toBe("");
     expect(files[2]?.content.trim()).toBe("");
     expect(files[3]?.content.trim()).toBe("");
+    expect(files[4]?.content.trim()).toBe("");
   });
 
   it("migrates legacy user and investment memory files into the new bootstrap paths", async () => {

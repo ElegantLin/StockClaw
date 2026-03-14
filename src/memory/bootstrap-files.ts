@@ -3,6 +3,7 @@ import type { MemoryService } from "./service.js";
 export const ROOT_BOOTSTRAP_MEMORY_FILES = [
   "non-investment/SOUL.md",
   "non-investment/USER.md",
+  "non-investment/MEMORY.md",
   "non-investment/TOOLS.md",
   "knowledge/INVESTMENT-PRINCIPLES.md",
 ] as const;

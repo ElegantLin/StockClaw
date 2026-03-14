@@ -36,14 +36,16 @@ Persist these kinds of durable information:
 - trading constraints
 - preferred holding period
 - the user's preferred name or how stock-claw should address them
+- durable non-investment background, preferences, or standing requests that are not primarily about identity or tools
 - stock-claw's name, persona, or speaking style when the user explicitly wants to shape it
 - newly installed tools, local command habits, or environment-specific tool usage notes
 
 Write these to:
 
 - `memory/non-investment/SOUL.md` for stock-claw's name, persona, or speaking style
-- `memory/non-investment/USER.md` for the user's preferred name, how to address them, and other durable non-investment personal context
-- `memory/non-investment/TOOLS.md` for new tools, installation notes, and environment-specific usage guidance
+- `memory/non-investment/USER.md` for the user's preferred name, how to address them, and durable identity-level personal context
+- `memory/non-investment/MEMORY.md` for other durable non-investment memory that should persist across sessions but does not primarily belong in `USER.md` or `TOOLS.md`
+- `memory/non-investment/TOOLS.md` for new tools, installation notes, command habits, and environment-specific usage guidance
 - `memory/knowledge/INVESTMENT-PRINCIPLES.md` for reusable investment frameworks, durable strategy rules, and long-lived research conclusions
 - `memory/portfolio/summary.md` only for agent-readable portfolio context summaries, never as the authoritative source of holdings truth
 

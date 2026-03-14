@@ -15,6 +15,7 @@ describe("ResearchCoordinator bootstrap memory injection", () => {
     const memory = new MemoryService(root);
     await ensureBootstrapMemoryFiles(memory);
     await memory.appendDocument("non-investment/USER.md", "Agent Update", ["Call the user Alex."]);
+    await memory.appendDocument("non-investment/MEMORY.md", "Agent Update", ["The user prefers concise, no-fluff replies."]);
     await memory.appendDocument("non-investment/TOOLS.md", "Agent Update", ["PinchTab is available on this machine."]);
 
     let capturedSystemPrompt = "";
@@ -85,9 +86,12 @@ describe("ResearchCoordinator bootstrap memory injection", () => {
     expect(capturedSystemPrompt).toContain("User-writable bootstrap memory files are loaded below.");
     expect(capturedSystemPrompt).toContain("memory/non-investment/USER.md");
     expect(capturedSystemPrompt).toContain("Call the user Alex.");
+    expect(capturedSystemPrompt).toContain("memory/non-investment/MEMORY.md");
+    expect(capturedSystemPrompt).toContain("The user prefers concise, no-fluff replies.");
     expect(capturedSystemPrompt).toContain("memory/non-investment/TOOLS.md");
     expect(capturedSystemPrompt).toContain("PinchTab is available on this machine.");
     expect(capturedUserPrompt).not.toContain("Call the user Alex.");
+    expect(capturedUserPrompt).not.toContain("The user prefers concise, no-fluff replies.");
     expect(capturedUserPrompt).not.toContain("PinchTab is available on this machine.");
   });
 });
