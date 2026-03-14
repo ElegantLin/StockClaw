@@ -101,6 +101,8 @@ export interface AppSessionRecord {
   sessionSummaryUpdatedAt: string | null;
   lastUsage: UsageSnapshot | null;
   cumulativeUsage: UsageAggregate;
+  dailyUsage: UsageAggregate;
+  dailyUsageDate: string | null;
 }
 
 export interface Position {
@@ -158,14 +160,13 @@ export interface SessionStatusPayload {
   updatedAt: string;
   contextUsage: {
     contextTokens: number;
-    source: "provider" | "estimate";
     contextWindow: number;
     remainingTokens: number;
     percentUsed: number;
     compactionThresholdTokens: number;
-  };
+  } | null;
   lastUsage: UsageSnapshot | null;
-  cumulativeUsage: UsageAggregate;
+  dailyUsage: UsageAggregate;
   specialistCount: number;
   specialists: SpecialistResult[];
   backtests: {

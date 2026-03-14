@@ -37,6 +37,17 @@ describe("archiveSessionToMemory", () => {
         contextTokens: 0,
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
       },
+      dailyUsage: {
+        turns: 0,
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        totalTokens: 0,
+        contextTokens: 0,
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      },
+      dailyUsageDate: null,
     };
 
     const relative = await archiveSessionToMemory({

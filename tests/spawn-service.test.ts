@@ -193,9 +193,8 @@ describe("SessionSpawnService", () => {
     expect((await service.history("root", "req"))).toHaveLength(1);
     const status = await service.status("root", "req");
     expect(status.specialistCount).toBe(1);
-    expect(status.contextUsage.contextWindow).toBe(1000);
-    expect(status.contextUsage.contextTokens).toBeGreaterThan(0);
-    expect(status.contextUsage.compactionThresholdTokens).toBe(600);
+    expect(status.contextUsage).toBeNull();
+    expect(status.dailyUsage.totalTokens).toBe(0);
     expect(status.specialists[0]?.usage?.totalTokens).toBe(30);
     expect(status.backtests.active).toBe(0);
     expect(status.crons.total).toBe(0);

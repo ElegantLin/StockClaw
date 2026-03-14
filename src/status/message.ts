@@ -7,7 +7,7 @@ export function buildStatusMessage(params: {
   runtime?: RuntimeInspectionPayload | null;
 }): string {
   const lastUsage = params.session.lastUsage ?? null;
-  const cumulativeUsage = params.session.cumulativeUsage ?? {
+  const dailyUsage = params.session.dailyUsage ?? {
     turns: 0,
     input: 0,
     output: 0,
@@ -25,21 +25,27 @@ export function buildStatusMessage(params: {
     `Last Intent: ${params.session.lastIntent ?? "none"}`,
     `Updated: ${params.session.updatedAt}`,
     "",
-    "🧠 Context:",
-    `- Context Tokens: ${params.session.contextUsage.contextTokens}`,
-    `- Source: ${params.session.contextUsage.source}`,
-    `- Window: ${params.session.contextUsage.contextWindow}`,
-    `- Remaining: ${params.session.contextUsage.remainingTokens}`,
-    `- Used: ${params.session.contextUsage.percentUsed}%`,
-    `- Compact Threshold: ${params.session.contextUsage.compactionThresholdTokens}`,
-    "",
     "📊 Usage:",
     `- Last Turn: turns=${lastUsage ? 1 : 0} ↑${lastUsage?.input ?? 0} ↓${lastUsage?.output ?? 0} total=${lastUsage?.totalTokens ?? 0} cost=${(lastUsage?.cost.total ?? 0).toFixed(6)}`,
-    `- Session Total: turns=${cumulativeUsage.turns} ↑${cumulativeUsage.input} ↓${cumulativeUsage.output} total=${cumulativeUsage.totalTokens} cost=${cumulativeUsage.cost.total.toFixed(6)}`,
+    `- Today Total (Asia/Shanghai): turns=${dailyUsage.turns} ↑${dailyUsage.input} ↓${dailyUsage.output} total=${dailyUsage.totalTokens} cost=${dailyUsage.cost.total.toFixed(6)}`,
     "",
     `Transcript Entries: ${params.session.transcriptEntries}`,
     `Spawned Specialists: ${params.session.specialistCount}`,
   ];
+
+  if (params.session.contextUsage) {
+    lines.splice(
+      5,
+      0,
+      "",
+      "🧠 Context:",
+      `- Context Tokens: ${params.session.contextUsage.contextTokens}`,
+      `- Window: ${params.session.contextUsage.contextWindow}`,
+      `- Remaining: ${params.session.contextUsage.remainingTokens}`,
+      `- Used: ${params.session.contextUsage.percentUsed}%`,
+      `- Compact Threshold: ${params.session.contextUsage.compactionThresholdTokens}`,
+    );
+  }
 
   if (params.session.specialists.length > 0) {
     lines.push("", "🧩 Specialists:");

@@ -578,14 +578,13 @@ describe("TelegramExtension", () => {
         updatedAt: "2026-03-09T00:00:00.000Z",
         contextUsage: {
           contextTokens: 1800,
-          source: "estimate",
           contextWindow: 128000,
           remainingTokens: 126200,
           percentUsed: 1,
           compactionThresholdTokens: 76800,
         },
         lastUsage: null,
-        cumulativeUsage: {
+        dailyUsage: {
           turns: 0,
           input: 0,
           output: 0,
@@ -705,6 +704,7 @@ describe("TelegramExtension", () => {
     expect(orchestrator.getSessionStatus).toHaveBeenCalledTimes(1);
     expect(sent.some((item) => item.text.includes("Session Status"))).toBe(true);
     expect(sent.some((item) => item.text.includes("Context Tokens"))).toBe(true);
+    expect(sent.some((item) => item.text.includes("Today Total (Asia/Shanghai)"))).toBe(true);
     expect(sent.some((item) => item.text.includes("value_analyst"))).toBe(true);
     expect(sent.some((item) => item.text.includes("Backtests"))).toBe(true);
     expect(sent.some((item) => item.text.includes("job-2"))).toBe(true);

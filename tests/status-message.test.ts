@@ -12,16 +12,9 @@ describe("buildStatusMessage", () => {
         transcriptEntries: 4,
         sessionSummary: "User prefers low drawdown.",
         updatedAt: "2026-03-12T00:00:00.000Z",
-        contextUsage: {
-          contextTokens: 100,
-          source: "estimate",
-          contextWindow: 128000,
-          remainingTokens: 127900,
-          percentUsed: 1,
-          compactionThresholdTokens: 76800,
-        },
+        contextUsage: null,
         lastUsage: null,
-        cumulativeUsage: {
+        dailyUsage: {
           turns: 0,
           input: 0,
           output: 0,
@@ -109,16 +102,9 @@ describe("buildStatusMessage", () => {
           "- Prefer low drawdown.",
         ].join("\n"),
         updatedAt: "2026-03-12T00:00:00.000Z",
-        contextUsage: {
-          contextTokens: 100,
-          source: "estimate",
-          contextWindow: 128000,
-          remainingTokens: 127900,
-          percentUsed: 1,
-          compactionThresholdTokens: 76800,
-        },
+        contextUsage: null,
         lastUsage: null,
-        cumulativeUsage: {
+        dailyUsage: {
           turns: 0,
           input: 0,
           output: 0,
@@ -164,16 +150,9 @@ describe("buildStatusMessage", () => {
         transcriptEntries: 7,
         sessionSummary: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
-        contextUsage: {
-          contextTokens: 100,
-          source: "estimate",
-          contextWindow: 128000,
-          remainingTokens: 127900,
-          percentUsed: 1,
-          compactionThresholdTokens: 76800,
-        },
+        contextUsage: null,
         lastUsage: null,
-        cumulativeUsage: {
+        dailyUsage: {
           turns: 0,
           input: 0,
           output: 0,
@@ -252,16 +231,9 @@ describe("buildStatusMessage", () => {
         transcriptEntries: 7,
         sessionSummary: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
-        contextUsage: {
-          contextTokens: 100,
-          source: "estimate",
-          contextWindow: 128000,
-          remainingTokens: 127900,
-          percentUsed: 1,
-          compactionThresholdTokens: 76800,
-        },
+        contextUsage: null,
         lastUsage: null,
-        cumulativeUsage: {
+        dailyUsage: {
           turns: 0,
           input: 0,
           output: 0,
